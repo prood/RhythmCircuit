@@ -8,6 +8,64 @@ var pulses = []
 
 var GameMoving = false
 
+function getLinkedCell(x,y,k)
+{
+    switch(k)
+    {
+        case 0:
+            xx = x
+            yy = (y-1+circY)%circY
+            break;
+        case 1:
+            yy = y
+            xx = (x+1)%circX
+            break;
+        case 2:
+            xx = x
+            yy = (y+1)%circY
+            break;
+        case 3:
+            yy = y
+            xx = (x-1+circX)%circX
+            break;                                
+    }
+    
+    return [xx,yy]
+}
+
+function distributePotential()
+{
+    for (x=0;x<circX;x++)
+    {
+        for (y=0;y<circY;y++)
+        {
+            // Find all source nodes and add potential deltas across them
+            if (nodes[x][y] == 1) // Left-right source node
+            {
+                if (circuit_links[x][y][3])
+                {
+                    xx = (x-1+circX)%circX
+                    potential[xx][y] -= 1
+                    potential[x][y] += 1
+                }
+            }
+            
+            for (k=0;k<4;k++) // Propagate potential along links
+            {
+                if (circuit_links[x][y][k])
+                {
+                    [xx,yy] = getLinkedCell(x,y,k)
+                    
+                    avg = (potential[x][y] + potential[xx,yy])/2.0
+                    
+                    potential[x][y] = 0.75*potential[x][y] + 0.25*avg
+                    potential[xx][yy] = 0.75*potential[xx][yy] + 0.25*avg
+                }
+            }
+        }
+    }
+}
+
 function doNode(node_id, pulse)
 {
     // Node logic here...
@@ -125,6 +183,7 @@ Q.Sprite.extend("Pulse",
                 {
                     if (links[k] && (k != this.p.from))
                     {
+                        /*
                         switch(k)
                         {
                             case 0:
@@ -133,7 +192,7 @@ Q.Sprite.extend("Pulse",
                                 break;
                             case 1:
                                 yy = ty
-                                xx = (xx+1)%circX
+                                xx = (tx+1)%circX
                                 break;
                             case 2:
                                 xx = tx
@@ -144,6 +203,8 @@ Q.Sprite.extend("Pulse",
                                 xx = (tx-1+circX)%circX
                                 break;                                
                         }
+                        */
+                        [xx,yy] = getLinkedCell(tx,ty,k)
                         
                         delta = potential[tx][ty]-potential[xx][yy]
                         
