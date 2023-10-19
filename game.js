@@ -32,9 +32,6 @@ Q.cssHeight=YR*scaleFactor;
 
 var currentObj = null;
 
-var circuit_links = []
-var circuit_nodes = []
-
 var tiles = null;
 
 linkLookup = [
@@ -185,22 +182,34 @@ function doClick(e)
             }
             else if (ofsy<0.45) // Top wire
             {
-                circuit_links[tilex][tiley][0] = 1-circuit_links[tilex][tiley][0];
+                circuit_links[tilex][tiley][0] = 1-circuit_links[tilex][tiley][0]
+                xx = tilex
+                yy = (tiley-1+circY)%circY
+                circuit_links[xx][yy][2] = 1-circuit_links[xx][yy][2]
             }
             else if (ofsy>0.55) // Bottom wire
             {
-                circuit_links[tilex][tiley][2] = 1-circuit_links[tilex][tiley][2];
+                circuit_links[tilex][tiley][2] = 1-circuit_links[tilex][tiley][2]
+                xx = tilex
+                yy = (tiley+1)%circY
+                circuit_links[xx][yy][0] = 1-circuit_links[xx][yy][0]
             }
         }
         else if ((ofsy>=0.45)&&(ofsy<=0.55))
         {
             if (ofsx<0.45) // Left wire
             {
-                circuit_links[tilex][tiley][3] = 1-circuit_links[tilex][tiley][3];
+                circuit_links[tilex][tiley][3] = 1-circuit_links[tilex][tiley][3]
+                xx = (tilex-1+circX)%circX
+                yy = tiley
+                circuit_links[xx][yy][1] = 1-circuit_links[xx][yy][1]
             }
             else if (ofsx>0.55) // Right wire
             {
-                circuit_links[tilex][tiley][1] = 1-circuit_links[tilex][tiley][1];
+                circuit_links[tilex][tiley][1] = 1-circuit_links[tilex][tiley][1]
+                xx = (tilex+1)%circX
+                yy = tiley
+                circuit_links[xx][yy][3] = 1-circuit_links[xx][yy][3]
             }
         }
         
@@ -224,15 +233,20 @@ function recalculateTiles()
 }
 
 Q.scene("Main",function (stage) {		
-    for (i=0;i<16;i++)
+    for (i=0;i<circY;i++)
     {
         circuit_links[i] = []
         circuit_nodes[i] = []
+        potential[i] = []
+        nodes[i] = []
         
-        for (j=0;j<16;j++)
+        for (j=0;j<circX;j++)
         {
             circuit_nodes[i][j] = 0;
             circuit_links[i][j] = [];
+            potential[i][j] = 0;
+            nodes[i][j] = 0;
+            
             for (k=0;k<4;k++)
             {
                 circuit_links[i][j][k] = 0;
@@ -248,16 +262,16 @@ Q.scene("Main",function (stage) {
 	}));
     
     data = []
-    for (i=0;i<16;i++)
+    for (i=0;i<circX;i++)
     {
         data[i] = []
-        for (j=0;j<16;j++)
+        for (j=0;j<circY;j++)
         {
             data[i][j] = 1
         }
     }
-    tiles.p.rows = 16
-    tiles.p.cols = 16
+    tiles.p.rows = circX
+    tiles.p.cols = circY
     
     tiles.p.tiles = data
     tiles.p.w = tiles.p.cols * tiles.p.tileW;
