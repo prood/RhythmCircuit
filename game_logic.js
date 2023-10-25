@@ -40,7 +40,12 @@ function distributePotential()
         for (y=0;y<circY;y++)
         {
             // Find all source nodes and add potential deltas across them
-            if (nodes[x][y] == 1) // Left-right source node
+            if (nodes[x][y] == 1) // Source node
+            {
+                potential[x][y] += 2
+            }
+            
+            if (nodes[x][y] == 2) // Left-Right diode node
             {
                 if (circuit_links[x][y][3])
                 {
@@ -174,7 +179,7 @@ Q.Sprite.extend("Pulse",
                 // Now figure out where we're going to in the new cell
                 links = circuit_links[this.p.tx][this.p.ty]                               
                 best = -1
-                best_delta = -1
+                best_delta = -10
                 
                 tx = this.p.tx
                 ty = this.p.ty

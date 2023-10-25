@@ -33,7 +33,20 @@ Q.cssHeight=YR*scaleFactor;
 var currentObj = null;
 
 var tiles = null;
+var node_type = 0;
 
+var sprites = [];
+
+node_assets = [
+ null,
+ "source.png",
+ "diode.png",
+ "attack.png",
+ "block.png",
+ "absorb.png",
+ "switch.png"
+]
+ 
 linkLookup = [
     1, // 0 = Empty tile
     4, // 1 = Top wire on
@@ -149,7 +162,7 @@ window.onmouseup = function(e) {
 window.onload = function() {
 	Q.enableSound();
 
-	var assetString = "tiles.png, wire.png, branch.png";
+	var assetString = "tiles.png, absorb.png, attack.png, block.png, branch.png, diode.png, dodge.png, node.png, source.png, switch.png";
 	
 	Q.load(assetString, function() {
         Q.sheet("tiles","tiles.png", { tilew: 64, tileh: 64 });
@@ -179,6 +192,7 @@ function doClick(e)
         {
             if ((ofsy>=0.45)&&(ofsy<=0.55)) // Center, replace node
             {
+                circuit_nodes[tilex][tiley] = node_type
             }
             else if (ofsy<0.45) // Top wire
             {
@@ -213,32 +227,53 @@ function doClick(e)
             }
         }
         
-        console.log(circuit_links[tilex][tiley])
-        recalculateTiles();        
+        //console.log(circuit_links[tilex][tiley])
+        recalculateTiles(Q.stage());        
     }
 }
 
-function recalculateTiles()
+function recalculateTiles(stage)
 {
-    for (i=0;i<16;i++)
+    for (i=0;i<circX;i++)
     {
-        for (j=0;j<16;j++)
+        for (j=0;j<circX;j++)
         {
             links = circuit_links[i][j];
             
             links = linkLookup[links[0]+2*links[1]+4*links[2]+8*links[3]];
             tiles.setTile(i,j, links)
+            
+            if (node_assets[circuit_nodes[i][j]] != sprites[i][j].p.asset)
+            {
+                sprites[i][j].destroy()
+                new_sprite = new Q.Sprite({
+                    x: 32 + i*64, y: 32 + j*64,
+                    asset: node_assets[circuit_nodes[i][j]],
+                    z: 2
+                })
+                
+                sprites[i][j] = new_sprite
+                stage.insert(new_sprite)
+            }
         }
     }
 }
 
 Q.scene("Main",function (stage) {		
+	tiles = stage.insert(new Q.TileLayer({
+		type: Q.SPRITE_DEFAULT,
+        tileW: 64,
+        tileH: 64,
+		sheet: "tiles"
+	}));
+    
     for (i=0;i<circY;i++)
     {
         circuit_links[i] = []
         circuit_nodes[i] = []
         potential[i] = []
         nodes[i] = []
+        sprites[i] = []
         
         for (j=0;j<circX;j++)
         {
@@ -247,19 +282,20 @@ Q.scene("Main",function (stage) {
             potential[i][j] = 0;
             nodes[i][j] = 0;
             
+            sprites[i][j] = new Q.Sprite({
+                x: 32 + j*64, y: 32+i*64,
+                asset: null,
+                z: 2
+            })
+            
+            stage.insert(sprites[i][j])
+            
             for (k=0;k<4;k++)
             {
                 circuit_links[i][j][k] = 0;
             }
         }
     }
-
-	tiles = stage.insert(new Q.TileLayer({
-		type: Q.SPRITE_DEFAULT,
-        tileW: 64,
-        tileH: 64,
-		sheet: "tiles"
-	}));
     
     data = []
     for (i=0;i<circX;i++)
@@ -285,24 +321,62 @@ Q.scene("Main",function (stage) {
 	
 	stage.viewport.centerOn(viewX, viewY);
     
-    /*
     stage.insert(new Q.GrowButton({
-            x: 8, y: 8,
-            asset: "wire.png"
+            x: 8, y: 1080,
+            asset: "node.png"
         }, function() 
         {
-            console.log("Test"); 
+            node_type = 0
+        }));
+        
+    stage.insert(new Q.GrowButton({
+            x: 8+64, y: 1080,
+            asset: "source.png"
+        }, function() 
+        {
+            node_type = 1
         }));
 	
     stage.insert(new Q.GrowButton({
-            x: 8, y: 8+64,
-            asset: "branch.png"
+            x: 8+64*2, y: 1080,
+            asset: "diode.png"
         }, function() 
         {
-            console.log("Test 2"); 
+            node_type = 2
         }));
-	*/
     
+    stage.insert(new Q.GrowButton({
+            x: 8+64*3, y: 1080,
+            asset: "attack.png"
+        }, function() 
+        {
+            node_type = 3
+        }));
+        
+    stage.insert(new Q.GrowButton({
+            x: 8+64*4, y: 1080,
+            asset: "block.png"
+        }, function() 
+        {
+            node_type = 4
+        }));
+        
+    stage.insert(new Q.GrowButton({
+            x: 8+64*5, y: 1080,
+            asset: "absorb.png"
+        }, function() 
+        {
+            node_type = 5
+        }));
+        
+    stage.insert(new Q.GrowButton({
+            x: 8+64*6, y: 1080,
+            asset: "switch.png"
+        }, function() 
+        {
+            node_type = 6
+        }));
+        
 	stage.on("step", stageStep);
 	
 	offStage=false;
